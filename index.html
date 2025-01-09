@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js GLB Model</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/TTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/opentype.js/1.3.3/opentype.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
+    <script>
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        50,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+      const mouse = {
+        x: 0,
+        y: 0,
+        targetX: 0,
+        targetY: 0,
+      };
+      document.addEventListener("mousemove", (event) => {
+        // Convert mouse position to normalized coordinates (-1 to 1)
+        mouse.targetX = (event.clientX / window.innerWidth) * 2 - 1; // Fixed typo here
+        mouse.targetY = -(event.clientY / window.innerHeight) * 2 + 1;
+      });
+      let mixer;
+      const light = new THREE.DirectionalLight(0xffffff, 1);
+      light.position.set(1, 1, 1).normalize();
+      scene.add(light);
+      const loader = new THREE.GLTFLoader();
+      let roseModel;
+      loader.load(
+        "rose.glb",
+        function (gltf) {
+          roseModel = gltf.scene;
+          scene.add(roseModel);
+          roseModel.position.y = 13;
+          roseModel.position.z = -14;
+          roseModel.position.x = 3;
+          renderer.render(scene, camera);
+        },
+        undefined,
+        function (error) {
+          console.error(error);
+        }
+      );
+      let butterfly;
+      loader.load(
+        "butterfly.glb",
+        function (gltf) {
+          butterfly = gltf.scene;
+          scene.add(butterfly);
+          butterfly.position.set(0, 0, 0);
+          mixer = new THREE.AnimationMixer(butterfly);
+          const animations = gltf.animations;
+          if (animations && animations.length) {
+            animations.forEach((clip) => {
+              mixer.clipAction(clip).play();
+            });
+          }
+        },
+        undefined,
+        function (error) {
+          console.error(error);
+        }
+      );
+      camera.position.z = 5;
+      const ttfLoader = new THREE.TTFLoader();
+      ttfLoader.load("Vogue.ttf", function (json) {
+        const font = new THREE.Font(json);
+        const textGeometry = new THREE.TextGeometry("Roses", {
+          font: font,
+          size: 5,
+          height: 1,
+          curveSegments: 60,
+          bevelEnabled: false,
+        });
+        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xfcba03 });
+        const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+        textMesh.position.set(-10, 2, -20);
+        scene.add(textMesh);
+      });
+      camera.position.z = 5;
+      let clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        mouse.x += (mouse.targetX - mouse.x) * 0.05;
+        mouse.y += (mouse.targetY - mouse.y) * 0.05;
+
+        // Rotate camera based on mouse position
+        camera.position.x = THREE.MathUtils.clamp(mouse.x * 0.8, -3, 3);
+        camera.position.y = THREE.MathUtils.clamp(mouse.y * 0.8, -3, 3);
+        camera.position.z = 5;
+
+        const delta = clock.getDelta();
+        if (mixer) mixer.update(delta);
+
+        // Make camera look at the center of the scene
+        camera.lookAt(scene.position);
+        if (roseModel) {
+          let time = clock.getElapsedTime();
+
+          // Subtle swaying motion
+          roseModel.rotation.x = Math.sin(time * 0.5) * 0.002; // Gentle forward/backward tilt
+          roseModel.rotation.z = Math.cos(time * 0.7) * 0.002; // Gentle side-to-side tilt
+
+          // Very subtle position movement
+          roseModel.position.x = 3 + Math.sin(time * 0.8) * 0.1;
+          roseModel.position.y = 13 + Math.sin(time * 0.6) * 0.1;
+        }
+        if (butterfly) {
+          let time = clock.getElapsedTime();
+
+          // Main flight path
+          butterfly.position.x = Math.sin(time * 0.5) * 10;
+          butterfly.position.y =
+            Math.sin(time * 2) * 2 + Math.cos(time * 0.5) * 5 + 5;
+          butterfly.position.z = Math.cos(time * 0.5) * 10;
+
+          // Add natural rotation to follow movement
+          butterfly.rotation.y = Math.atan2(
+            Math.cos(time * 0.5) * 10,
+            -Math.sin(time * 0.5) * 10
+          );
+
+          // Add slight tilt when turning
+          butterfly.rotation.z = Math.sin(time * 0.5) * 0.2;
+
+          // Add bobbing motion
+          butterfly.rotation.x = Math.sin(time * 4) * 0.1;
+        }
+        renderer.render(scene, camera);
+      }
+      animate();
+    </script>
+  </body>
+</html>
