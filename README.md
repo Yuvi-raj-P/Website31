@@ -1,0 +1,2 @@
+hello! thanks for looking into the repository. This is a simple three js site that took me 34 hours to make. Yea neither am i sure why it took me that long I have been stuck with the butterfly animation for so long. But finally its here, I am just gettin started with js as well while also trying to do three js so mistakes happen!
+![roses](https://github.com/user-attachments/assets/1a947f4d-cd12-4e6d-86ae-7c081ed23645)
