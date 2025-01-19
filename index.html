@@ -39,7 +39,7 @@
       };
       document.addEventListener("mousemove", (event) => {
         // Convert mouse position to normalized coordinates (-1 to 1)
-        mouse.targetX = (event.clientX / window.innerWidth) * 2 - 1; // Fixed typo here
+        mouse.targetX = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.targetY = -(event.clientY / window.innerHeight) * 2 + 1;
       });
       let mixer;
